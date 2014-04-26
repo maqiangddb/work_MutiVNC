@@ -1,0 +1,541 @@
+import java.applet.Applet;
+import java.awt.CardLayout;
+import java.awt.Checkbox;
+import java.awt.Color;
+import java.awt.Container;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.Frame;
+import java.awt.GridLayout;
+import java.awt.Label;
+import java.awt.Panel;
+import java.awt.Point;
+import java.awt.ScrollPane;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowListener;
+import java.util.ArrayList;
+import java.util.Observable;
+import java.util.Observer;
+import java.util.Vector;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
+
+
+
+public class MainViewer  extends  Applet implements WindowListener{
+	 public static java.applet.Applet refApplet;
+	 Container vncContainer;
+	 Panel mainFrame ;
+	 Point windowSize = new Point(320, 240);
+	 Vector<IPUtil.VNCBean> terminalList = new Vector<IPUtil.VNCBean>();
+	 IPUtil ipUtil ;
+	 private Frame mFrame = null;
+	 
+	  public static void main(String[] argv) {
+		  JFrame frame = new JFrame("VNC");
+		 
+		  MainViewer mainViewer = new MainViewer();
+		  mainViewer.mFrame = frame;
+		  mainViewer.init();
+		  mainViewer.start();
+	
+		  frame.setLayout(null);
+		  frame.add(mainViewer);
+		  frame.setVisible(true);
+		  frame.setBackground(new Color(173, 216, 230));
+		  frame.invalidate();
+	 }
+	 
+	  
+	  public void init( ){
+		  
+		  vncContainer = this;
+		  refApplet = this;
+		   ipUtil = new  IPUtil();
+		   ipUtil.addNetListener(new NetScan());
+		  
+		  GridLayout gLayout = new GridLayout(8, 3);
+		  gLayout.setHgap(20);
+		  gLayout.setVgap(20);
+		  mainFrame = new Panel();
+		  mainFrame.setLayout(gLayout);
+
+		  vncContainer.setLayout(null);
+		  vncContainer.add(getSelectPanel());
+		  vncContainer.setSize(400, 450);
+		  vncContainer.setBackground(new Color(173, 216, 230));
+		  
+		  if(mFrame != null){
+              mFrame.addWindowListener(this);
+			  mFrame.pack();
+			  mFrame.setSize(420, 500);
+			  mFrame.invalidate();
+		  }
+	  }
+
+	  
+	  private class NetScan implements Observer{
+		  
+		@Override
+		public void update(Observable o, Object arg) {
+			// TODO Auto-generated method stub
+			for(IPUtil.VNCBean bean: ipUtil.getTeminalList()){
+				addterminalList(bean);
+			}
+			
+			addButton.setEnabled(true);
+			windowSize = ipUtil.getWindowSize();
+			showTeminalView();
+		}
+		  
+	  }
+	  
+	  private void showTeminalView(){
+          Util.log("showTeminalView");
+		  if(terminalList.size() > 0){
+				scanTip.setVisible(false);
+				listTip.setVisible(true);
+				listPane.setVisible(true);
+				listPane.removeAll();
+				selectList.clear();
+				
+				JPanel panel = new JPanel();
+				panel.setBackground(Color.LIGHT_GRAY);
+				panel.setLayout(new GridLayout(0, 1));
+				for(IPUtil.VNCBean bean : terminalList){
+					String label = " "+bean.host +"   " + bean.model;
+					Checkbox box = new Checkbox(label);
+					box.setFont(new Font("宋体", Font.PLAIN, 12));
+					box.addItemListener(mItemListener);
+					box.setName(bean.host);
+					panel.add(box);
+				}
+				listPane.add(panel);
+				
+			}
+			else {
+				scanButton.setEnabled(true);
+				enterButton.setEnabled(false);
+				listTip.setVisible(false);
+				listPane.setVisible(false);
+				scanTip.setVisible(true);
+				scanTip.setText("没有扫描到 联网的终端设备");
+			}
+	  }
+	  
+	  private JButton scanButton ;
+	  private JButton addButton;
+	  private Label ipLabel;
+	  private JTextField ipText;
+	  private Label portLabel;
+	  private JTextField portText;
+	  private JButton confirmButton;
+	  private JLabel errorTip;
+	  private JButton enterButton;
+	  private JLabel  scanTip;
+	  private JLabel  selectLabel;
+	  private JLabel listTip;
+	  private ScrollPane  listPane ;
+	  private JPanel  selectPanel = null;
+	  public JPanel getSelectPanel(){
+		  if(selectPanel == null){
+			  selectPanel = new JPanel();
+			  selectPanel.setLayout(null);
+			  selectPanel.setBackground(new Color(173, 216, 230));
+			  selectPanel.setBounds(0, 0, 400, 450);
+			  
+			  
+			  scanButton = new JButton("自动扫描");
+			  scanButton.setBounds(10, 10, 100, 25);
+			  scanButton.setFont(new Font("宋体", Font.PLAIN, 14));
+			  scanButton.addActionListener(mClickListener);
+			  selectPanel.add(scanButton);
+	
+			  scanTip = new JLabel("点击 开始扫描 进行扫描");
+			  scanTip.setFont(new Font("宋体", Font.PLAIN, 12));
+			  scanTip.setBounds(120, 18, 150, 20);
+			  selectPanel.add(scanTip);
+			  
+			  
+			  
+			  addButton = new JButton("手动添加");
+			  addButton.setBounds(10, 40, 100, 25);
+			  addButton.setFont(new Font("宋体", Font.PLAIN, 14));
+			  addButton.addActionListener(mClickListener);
+			  selectPanel.add(addButton);
+			  
+			  ipLabel = new Label("IP:");
+			  ipLabel.setBounds(115, 40, 25, 25);
+			  ipLabel.setFont(new Font("宋体", Font.PLAIN, 16));
+			  selectPanel.add(ipLabel);
+			  
+			  ipText = new JTextField(1);
+			  ipText.setBounds(140, 40, 110, 25);
+			  ipText.setFont(new Font("宋体", Font.PLAIN, 14));
+			  selectPanel.add(ipText);
+			  
+			  portLabel = new Label("端口:");
+			  portLabel.setBounds(252, 40, 40, 25);
+			  portLabel.setFont(new Font("宋体", Font.PLAIN, 14));
+			  selectPanel.add(portLabel);
+			  
+			  portText = new JTextField(1);
+			  portText.setBounds(292, 40, 40, 25);
+			  portText.setFont(new Font("宋体", Font.PLAIN, 14));
+			  selectPanel.add(portText);
+			  
+			  confirmButton = new JButton("确定");
+			  confirmButton.setBounds(337, 40, 60, 25);
+			  confirmButton.setFont(new Font("宋体", Font.PLAIN, 12));
+			  confirmButton.addActionListener(mClickListener);
+			  selectPanel.add(confirmButton);
+			  
+			  errorTip = new JLabel("输入错误");
+			  errorTip.setFont(new Font("宋体", Font.PLAIN, 12));
+			  errorTip.setBounds(340, 22, 80, 20);
+			  errorTip.setForeground(Color.RED);
+			  selectPanel.add(errorTip);
+			  hideHandAdd();
+			  
+			  
+			  enterButton = new JButton("开始监控");
+			  enterButton.setBounds(280, 415, 110, 25);
+			  enterButton.setFont(new Font("宋体", Font.PLAIN, 14));
+			  enterButton.addActionListener(mClickListener);
+			  enterButton.setEnabled(false);
+			  selectPanel.add(enterButton);
+			  
+			  selectLabel =  new JLabel("请选择监控");
+			  selectLabel.setBounds(280, 395, 110, 20);
+			  selectLabel.setFont(new Font("宋体", Font.PLAIN, 12));
+			  selectLabel.setVisible(false);
+			  selectPanel.add(selectLabel);
+			  
+			  listTip = new JLabel("请选择要监控的屏");
+			  listTip.setBounds(10, 80, 100, 20);
+			  listTip.setFont(new Font("宋体", Font.PLAIN, 12));
+			  listTip.setVisible(false);
+			  selectPanel.add(listTip);
+			  
+			  listPane = new ScrollPane();
+			  listPane.setVisible(false);
+			  listPane.setBounds(10, 100, 250, 300);
+			  listPane.setBackground(Color.DARK_GRAY);
+			  selectPanel.add(listPane);	  
+		  }
+		  
+		  return selectPanel;
+	  }
+	  
+	  
+	  
+	  
+	  private ActionListener mClickListener = new ActionListener() {
+		
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			// TODO Auto-generated method stub
+			if(e.getSource() == scanButton){
+				hideHandAdd();
+				scanButton.setEnabled(false);
+				addButton.setEnabled(false);
+				
+				selectList.clear();
+				scanTip.setText("正在扫描，请稍后...");
+				ipUtil.getUseableList();
+			}
+			else if (e.getSource() == enterButton) {
+				if(terminalList.size() > 0){
+					selectLabel.setVisible(false);
+		
+					VNCshow();
+				}
+				else {
+					selectLabel.setVisible(true);
+				}
+			}
+			else if(e.getSource() == addButton){
+				showHandAdd();
+			}
+			else if(e.getSource() == confirmButton){
+				String ip = ipText.getText();
+				String port = portText.getText();
+				if(isValidateIp(ip) && isPosInt(port)){//如果是有效输入
+					hideHandAdd();
+					
+					IPUtil.VNCBean bean = ipUtil.newBean();
+					bean.host = ip;
+					bean.port = Integer.valueOf(port) + 100;//VNC的IP需要真实的port+100
+					bean.model = " ";
+					
+					addterminalList(bean);
+					showTeminalView();
+				}
+				else {
+					errorTip.setVisible(true);
+				}
+			}
+			
+		}
+	};
+	
+	//显示手动添加
+	private void showHandAdd(){
+		ipLabel.setVisible(true);
+		ipText.setVisible(true);
+		ipText.setText("");
+		portLabel.setVisible(true);
+		portText.setVisible(true);
+		portText.setText("");
+		confirmButton.setVisible(true);
+		  
+		errorTip.setVisible(false);
+		addButton.setEnabled(false);
+	}
+	
+	//隐藏手动添加
+	private void hideHandAdd(){
+		ipLabel.setVisible(false);
+		ipText.setVisible(false);
+		portLabel.setVisible(false);
+		portText.setVisible(false);
+		confirmButton.setVisible(false);
+		  
+		errorTip.setVisible(false);
+		addButton.setEnabled(true);
+	}
+	
+	private void VNCshow(){
+        Util.log("VNCshow list.size:"+selectList.size()+" ");
+		vncContainer.removeAll();
+		int width = 400;
+		int high = 450;
+        CardLayout cLayout = new CardLayout();
+        vncContainer.setLayout(cLayout);
+        mainFrame = new Panel();
+        mainFrame.setBackground(Color.black);
+        GridLayout gLayout;
+		if(selectList.size() <4 ){ 
+			//mainFrame = new Panel();
+			for (int i = 0; i < selectList.size(); i++) {
+				IPUtil.VNCBean bean = selectList.get(i);
+
+				VncViewer v = null;
+                if (false) {//mFrame != null) {
+                    //v = new VncViewer(bean.port, bean.host, backListenr, mFrame);
+                } else {
+                    v = new VncViewer(bean.port, bean.host, backListenr);
+                }
+                System.out.println("VncViewer preferred size:"+v.getPreferredSize().toString());
+                System.out.println("Aim size:"+windowSize.toString());
+				v.setPreferredSize(new Dimension(windowSize.x, windowSize.y));
+				mainFrame.add(v);
+			}
+			//CardLayout cLayout = new CardLayout();
+			//vncContainer.setLayout(cLayout);
+			//vncContainer.add(mainFrame);
+			width = windowSize.x + 20;
+			high = (windowSize.y + 10) * selectList.size();
+			//vncContainer.setSize(width, high);
+
+			
+		}
+		else if(selectList.size() <= 8 ) {
+			int row = 2;
+			int cols = selectList.size()/ row + (selectList.size() % row != 0 ? 1:0 );
+			gLayout = new GridLayout(cols, row);
+			gLayout.setHgap(20);
+			gLayout.setVgap(20);
+			//mainFrame = new Panel();
+			mainFrame.setLayout(gLayout);
+			for (int i = 0; i < selectList.size(); i++) {
+				IPUtil.VNCBean bean = selectList.get(i);
+                VncViewer v = null;
+                if (false) {//mFrame != null) {
+                    //v = new VncViewer(bean.port, bean.host, backListenr, mFrame);
+                } else {
+                    v = new VncViewer(bean.port, bean.host, backListenr);
+                }
+                System.out.println("VncViewer preferred size:"+v.getPreferredSize().toString());
+                System.out.println("Aim size:"+windowSize.toString());
+				v.setPreferredSize(new Dimension(windowSize.x, windowSize.y));
+				mainFrame.add(v);
+			}
+
+		  //ScrollPane scrollPane = new ScrollPane();
+
+		  //scrollPane.add(mainFrame);
+		  //CardLayout cLayout = new CardLayout();
+		  //vncContainer.setLayout(cLayout);
+		  //vncContainer.add(scrollPane);
+		  
+		  width =  row * windowSize.x + (row - 1) * 20;
+		  high =  cols * windowSize.y + (cols + 1)* 20; 
+		  //vncContainer.setSize(width, high);
+		}
+		else {
+			int row = windowSize.x >= 800 ? 2:3;
+			int cols = selectList.size()/ row + (selectList.size() % row != 0 ? 1:0 );
+			gLayout = new GridLayout(cols, row);
+			gLayout.setHgap(20);
+			gLayout.setVgap(20);
+			//mainFrame = new Panel();
+			mainFrame.setLayout(gLayout);
+			for (int i = 0; i < selectList.size(); i++) {
+				IPUtil.VNCBean bean = selectList.get(i);
+				VncViewer v =  new VncViewer(bean.port, bean.host, backListenr);
+				v.setPreferredSize(new Dimension(windowSize.x, windowSize.y));
+				mainFrame.add(v);
+			}
+
+		  //ScrollPane scrollPane = new ScrollPane();
+
+		  //scrollPane.add(mainFrame);
+		  //CardLayout cLayout = new CardLayout();
+		  //vncContainer.setLayout(cLayout);
+		  //vncContainer.add(scrollPane);
+		  
+		  width =  row * windowSize.x + (row - 1) * 20;
+		  high = width * 4 /3;
+		  //vncContainer.setSize(width, high);
+		}
+
+        ScrollPane scrollPane = new ScrollPane();
+        System.out.println("mainFrame:"+mainFrame.toString());
+        scrollPane.add(mainFrame);
+
+        //vncContainer.add(scrollPane);
+        vncContainer.setSize(width, high);
+        Util.log("width:"+width+" high:"+high);
+		
+		 //invalidate();
+		  if(mFrame != null){
+			  mFrame.pack();
+			  mFrame.setSize(width +20, high + 35);
+			  mFrame.invalidate();
+		  }
+		 
+	}
+	
+	private ArrayList<IPUtil.VNCBean> selectList = new ArrayList<IPUtil.VNCBean>();
+	private ItemListener mItemListener = new ItemListener() {
+		
+		@Override
+		public void itemStateChanged(ItemEvent arg0) {
+			// TODO Auto-generated method stub
+			Checkbox item = (Checkbox) arg0.getSource();
+			IPUtil.VNCBean changeBean = null;
+			for(IPUtil.VNCBean bean : terminalList){
+				if (item.getName().equals(bean.host)) {
+					changeBean = bean;
+					break;
+				}
+			}
+			if (arg0.getStateChange() == ItemEvent.SELECTED) {
+				selectList.add(changeBean);
+			}
+			else {
+				selectList.remove(changeBean);
+			}
+			
+			// 进行判断 是否能够进入 检测界面
+			if(selectList.size() > 0){
+				enterButton.setEnabled(true);
+			}
+			else {
+				enterButton.setEnabled(false);
+			}
+			
+		}
+	};
+	
+	
+	private ButtonPanel.BackEventListenr backListenr = new ButtonPanel.BackEventListenr() {
+		
+		public void OnBackEvent() {
+			vncContainer.removeAll();
+			vncContainer.setLayout(null);
+			vncContainer.add(getSelectPanel());
+			vncContainer.setSize(400, 450);
+			vncContainer.setBackground(new Color(173, 216, 230));
+			//
+			scanButton.setEnabled(true);
+			
+			 if(mFrame != null){
+				  mFrame.pack();
+				  mFrame.setSize(420, 500);
+				  mFrame.invalidate();
+			  }
+		}
+	};
+	
+	public void addterminalList(IPUtil.VNCBean bean){
+		for(IPUtil.VNCBean tBean : terminalList){
+			if(tBean.host.equals(bean.host) && tBean.port == bean.port){
+                if (false) {
+                    return;
+                }
+			}
+		}
+		
+		terminalList.add(bean);
+	}
+	
+	
+	/**
+	 * 验证ip的合法性
+	 * 
+	 */
+	private  boolean isValidateIp(String ip) {
+		Pattern pattern = Pattern
+				.compile("\\b((?!\\d\\d\\d)\\d+|1\\d\\d|2[0-4]\\d|25[0-5])\\.((?!\\d\\d\\d)\\d+|1\\d\\d|2[0-4]\\d|25[0-5])\\.((?!\\d\\d\\d)\\d+|1\\d\\d|2[0-4]\\d|25[0-5])\\.((?!\\d\\d\\d)\\d+|1\\d\\d|2[0-4]\\d|25[0-5])\\b");
+
+		Matcher matcher = pattern.matcher(ip); // 以验证127.400.600.2为例
+
+		return matcher.matches();
+	}
+	
+	/**
+	 * 是否是正整数
+	 */
+	private  boolean isPosInt(String str){ 
+		if (null == str || "".equals(str)) {
+			return false;
+		}
+		boolean resulet=false;
+		Pattern pattern = Pattern.compile("[0-9]*");
+		resulet=pattern.matcher(str).matches();
+		return resulet;
+	}
+	  
+
+	public void windowActivated(WindowEvent e) {
+	}
+	public void windowClosed(WindowEvent e) {
+	}
+	public void windowClosing(WindowEvent e) {
+		System.out.println("Closing window!!");
+			System.exit(0);
+	}
+	public void windowDeactivated(WindowEvent e) {
+	}
+	public void windowDeiconified(WindowEvent e) {
+	}
+	public void windowIconified(WindowEvent e) {
+	}
+	public void windowOpened(WindowEvent e) {
+	}
+
+
+	
+}
