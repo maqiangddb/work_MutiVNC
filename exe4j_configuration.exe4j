@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <exe4j version="4.5.2" transformSequenceNumber="1">
-  <directoryPresets config="D:/work/Samkoon/vnc_webclient" />
+  <directoryPresets config="D:/work/Samkoon/vnc_webclient/work_MutiVNC/src" />
   <application name="显控远程监控" distributionSourceDir="D:/work/Samkoon/vnc_webclient/多屏远程监控更新">
     <languages>
       <principalLanguage id="en" customLocalizationFile="" />
@@ -24,7 +24,7 @@
       <directory location="C:/Program Files/Java/jre6" />
     </searchSequence>
     <classPath>
-      <archive location="../Modifyvnc/src/VncMain.jar" failOnError="false" />
+      <archive location="../work_MutiVNC/src/VncMain.jar" failOnError="false" />
     </classPath>
     <nativeLibraryDirectories />
   </java>

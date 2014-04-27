@@ -37,7 +37,8 @@ import javax.swing.JTextField;
 public class MainViewer  extends  Applet implements WindowListener{
     public static java.applet.Applet refApplet;
 
-    private boolean Debug = true;
+    public static final String VERSION = "1.0-0b7e58b1";
+    private boolean Debug = false;
     Container vncContainer;
     //Panel mainFrame ;
     JPanel mainFrame;
@@ -51,7 +52,7 @@ public class MainViewer  extends  Applet implements WindowListener{
     public static void main(String[] argv) {
         String model = "AK-070AE";
         System.out.println("model leghth:"+model.length());
-        JFrame frame = new JFrame("ÏÔ¿Ø¼à¿ØÈí¼þ");
+        JFrame frame = new JFrame("ÏÔ¿Ø¼à¿ØÈí¼þ "+VERSION);
 
         MainViewer mainViewer = new MainViewer();
         mainViewer.mFrame = frame;
