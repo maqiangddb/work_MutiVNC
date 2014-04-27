@@ -45,6 +45,8 @@ import java.io.IOException;
 import java.net.ConnectException;
 import java.net.NoRouteToHostException;
 import java.net.UnknownHostException;
+import java.util.Observable;
+import java.util.Observer;
 
 import javax.swing.BorderFactory;
 import javax.swing.JPanel;
@@ -1093,6 +1095,28 @@ public class VncViewer extends JPanel {
     //
     // Ignore window events we're not interested in.
     //
+    private RefreshNotify refreshNotify = new RefreshNotify();
+    private class RefreshNotify extends Observable{
+
+        public synchronized void onRefresh() {
+            System.out.println("send onRefreshed!!!! count:"+this.countObservers());
+            this.setChanged();
+            this.notifyObservers();
+        }
+
+    }
+
+    public void addRefreshObserver(Observer observer) {
+
+        refreshNotify.addObserver(observer);
+    }
+
+    @Override
+    public void validate() {
+        super.validate();
+        System.out.println("VncViewer validate!!!!");
+        refreshNotify.onRefresh();
+    }
 
     public void windowActivated(WindowEvent evt) {}
     public void windowDeactivated (WindowEvent evt) {}
